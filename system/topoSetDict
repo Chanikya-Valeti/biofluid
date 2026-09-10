@@ -1,0 +1,151 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      topoSetDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+/*--------------------------------*- C++ -*----------------------------------*\
+| Make a 20 mm thick porous disk at y=0 with 4 concentric rings              |
+\*---------------------------------------------------------------------------*/
+
+actions
+(
+    // Full porous region: radius 0.02 m
+    {
+        name    porousAll_set;
+        type    cellSet;
+        action  new;
+
+        source      cylinderToCell;
+        sourceInfo
+        {
+            p1      (0 -0.01 0);     // start of porous
+            p2      (0  0.01 0);     // end of porous (length = 2 cm)
+            radius  0.02;            // full pipe radius
+        }
+    }
+
+    // Core: radius 0.005
+    {
+        name    porousCore_set;
+        type    cellSet;
+        action  new;
+
+        source      cylinderToCell;
+        sourceInfo
+        {
+             p1      (0 -0.01 0);
+             p2      (0  0.01 0);
+            radius  0.005;
+        }
+    }
+
+    // Ring 1: 0.005 → 0.010
+    {
+        name    porousRing1_set;
+        type    cellSet;
+        action  new;
+
+        source      cylinderAnnulusToCell;
+        sourceInfo
+        {
+             p1      (0 -0.01 0);
+             p2      (0  0.01 0);
+            innerRadius 0.005;
+            radius      0.010;
+        }
+    }
+
+    // Ring 2: 0.010 → 0.015
+    {
+        name    porousRing2_set;
+        type    cellSet;
+        action  new;
+
+        source      cylinderAnnulusToCell;
+        sourceInfo
+        {
+             p1      (0 -0.01 0);
+             p2      (0  0.01 0);
+            innerRadius 0.010;
+            radius      0.015;
+        }
+    }
+
+    // Ring 3: 0.015 → 0.020
+    {
+        name    porousRing3_set;
+        type    cellSet;
+        action  new;
+
+        source      cylinderAnnulusToCell;
+        sourceInfo
+        {
+             p1      (0 -0.01 0);
+             p2      (0  0.01 0);
+            innerRadius 0.015;
+            radius      0.020;
+        }
+    }
+
+    // Convert all sets to zones
+    {
+        name    porousAll;
+        type    cellZoneSet;
+        action  new;
+
+        source setToCellZone;
+        sourceInfo { set porousAll_set; }
+    }
+
+    {
+        name    porousCore;
+        type    cellZoneSet;
+        action  new;
+
+        source setToCellZone;
+        sourceInfo { set porousCore_set; }
+    }
+
+    {
+        name    porousRing1;
+        type    cellZoneSet;
+        action  new;
+
+        source setToCellZone;
+        sourceInfo { set porousRing1_set; }
+    }
+
+    {
+        name    porousRing2;
+        type    cellZoneSet;
+        action  new;
+
+        source setToCellZone;
+        sourceInfo { set porousRing2_set; }
+    }
+
+    {
+        name    porousRing3;
+        type    cellZoneSet;
+        action  new;
+
+        source setToCellZone;
+        sourceInfo { set porousRing3_set; }
+    }
+);
+
+
+
+
+// ************************************************************************* //

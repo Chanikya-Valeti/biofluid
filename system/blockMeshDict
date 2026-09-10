@@ -1,0 +1,133 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    location    "constant/polyMesh";
+    object      blockMeshDict;
+}
+/*--------------------------------*- C++ -*----------------------------------*\
+| Cylinder along y-axis: R=0.02 m, L=0.25 m (y in [-0.10, 0.15])             |
+| 5-block O-grid, axis-aligned core (no twist)                               |
+\*---------------------------------------------------------------------------*/
+scale 1.0;
+
+// --- parameters (for reference) ---
+// R  = 0.02
+// rc = 0.0085   // core half-width along x/z (axis-aligned)
+// y0 = -0.10, y1 = +0.15
+
+vertices
+(
+    // inlet (y = -0.10), outer on axes
+    ( 0.020 -0.10  0.000)  // 0  +x
+    ( 0.000 -0.10  0.020)  // 1  +z
+    (-0.020 -0.10  0.000)  // 2  -x
+    ( 0.000 -0.10 -0.020)  // 3  -z
+
+    // inlet (y = -0.10), inner axis-aligned square
+    ( 0.0085 -0.10  0.000) // 4  +x (inner)
+    ( 0.000  -0.10  0.0085)// 5  +z (inner)
+    (-0.0085 -0.10  0.000) // 6  -x (inner)
+    ( 0.000  -0.10 -0.0085)// 7  -z (inner)
+
+    // outlet (y = +0.15), outer
+    ( 0.020  0.15  0.000)  // 8
+    ( 0.000  0.15  0.020)  // 9
+    (-0.020  0.15  0.000)  // 10
+    ( 0.000  0.15 -0.020)  // 11
+
+    // outlet (y = +0.15), inner
+    ( 0.0085  0.15  0.000) // 12
+    ( 0.000   0.15  0.0085)// 13
+    (-0.0085  0.15  0.000) // 14
+    ( 0.000   0.15 -0.0085)// 15
+);
+
+// identical cell counts on all blocks to avoid mismatch;
+// axial is the 3rd number (here 100 → 2.5 mm)
+blocks
+(
+    // Center core (try this first)
+    hex (4 7 6 5 12 15 14 13) (10 10 100) simpleGrading (1 1 1)
+
+    // +x, +z quadrant  (shares edge 4–5 with core; inner→outer is first index)
+    hex (4 5 1 0 12 13 9 8) (10 10 100) simpleGrading (1 1 1)
+
+    // −x, +z quadrant  (shares edge 5–6 with core)
+    hex (5 6 2 1 13 14 10 9) (10 10 100) simpleGrading (1 1 1)
+
+    // −x, −z quadrant  (shares edge 6–7 with core)  **note 6 7 3 2 order**
+    hex (6 7 3 2 14 15 11 10) (10 10 100) simpleGrading (1 1 1)
+
+    // +x, −z quadrant  (shares edge 7–4 with core)
+    hex (7 4 0 3 15 12 8 11) (10 10 100) simpleGrading (1 1 1)
+);
+
+
+// outer circle arcs on inlet/outlet
+edges
+(
+    // inlet (y = -0.10)
+    arc 1 0 ( 0.0141421356 -0.10  0.0141421356)
+    arc 2 1 (-0.0141421356 -0.10  0.0141421356)
+    arc 3 2 (-0.0141421356 -0.10 -0.0141421356)
+    arc 0 3 ( 0.0141421356 -0.10 -0.0141421356)
+
+    // outlet (y = +0.15)
+    arc 9 8 ( 0.0141421356  0.15  0.0141421356)
+    arc 10 9 (-0.0141421356 0.15  0.0141421356)
+    arc 11 10 (-0.0141421356 0.15 -0.0141421356)
+    arc 8 11 ( 0.0141421356  0.15 -0.0141421356)
+);
+
+// patches
+boundary
+(
+    INLET
+    {
+        type patch;
+        faces
+        (
+            (4 5 6 7)
+            (4 5 1 0)
+            (5 6 2 1)
+            (7 6 2 3)
+            (4 7 3 0)
+        );
+    }
+
+    OUTLET
+    {
+        type patch;
+        faces
+        (
+            (12 13 14 15)
+            (12 13 9 8)
+            (13 14 10 9)
+            (15 14 10 11)
+            (12 15 11 8)
+        );
+    }
+
+    WALL
+    {
+        type wall;
+        faces
+        (
+            (1 0 8 9)
+            (2 1 9 10)
+            (3 2 10 11)
+            (0 3 11 8)
+        );
+    }
+);
+
+mergePatchPairs();
