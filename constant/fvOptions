@@ -1,0 +1,233 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      fvOptions;
+}
+
+// --------------------------------------------------------------------------
+//Instead of physically moving the valve, you alter the permeability of rings over time.
+
+//Open state:    d = 1e6 (low resistance)
+//Closed state:  d = 1e12 (very high resistance → blocks flow)
+
+// 0.00–0.15 s: Flow in the pipe
+
+// 0.15–0.25 s: close outer ring (Ring 3)
+
+// 0.25–0.35 s: close outer + mid rings
+
+// 0.35–0.50 s: close outer + mid + inner rings
+
+// 0.50–0.60 s: close all rings (core also closed)
+
+// 0.60–0.70 s: only core opens
+
+// 0.70–0.80 s: core + ring1 open
+
+// 0.80–0.90 s: core + ring1 + ring2 open
+
+// 0.90–1.00 s: all rings open
+// --------------------------------------------------------------------------
+porousBase_all
+{
+    type    explicitPorositySource;
+    active  yes;
+    fields  (U);
+
+    explicitPorositySourceCoeffs
+    {
+        selectionMode    cellZone;
+        cellZone         porousAll;
+
+        timeStart        0.0;
+        duration         1.0;    // or simulation end time
+
+        type DarcyForchheimer;
+        DarcyForchheimerCoeffs
+        {
+            // "Open" resistance
+            d d [0 -2 0 0 0 0 0] (1e6 1e6 1e6);
+            f f [0 -1 0 0 0 0 0] (0 0 0);
+
+            coordinateSystem
+            {
+                type    cartesian;
+                origin  (0 0 0);
+                rotation
+                {
+                    type axesRotation;
+                    e1 (1 0 0);
+                    e2 (0 1 0);
+                }
+            }
+        }
+    }
+}
+
+// --------------------------------------------------------------------------
+// CLOSING SOURCES (high resistance). These add on top of porousBase_all.
+// When they are active, that ring is effectively "closed".
+// When they stop, the ring returns to the baseline (open) state.
+// --------------------------------------------------------------------------
+
+// RING 3 (outer):
+// Closed from 0.15 s all the way until 0.90 s
+porousRing3_close
+{
+    type    explicitPorositySource;
+    active  yes;
+    fields  (U);
+
+    explicitPorositySourceCoeffs
+    {
+        selectionMode    cellZone;
+        cellZone         porousRing3;
+
+        timeStart        0.15;
+        duration         0.75;   // 0.15–0.90 s closed
+
+        type DarcyForchheimer;
+        DarcyForchheimerCoeffs
+        {
+            d d [0 -2 0 0 0 0 0] (1e12 1e12 1e12);
+            f f [0 -1 0 0 0 0 0] (0 0 0);
+
+            coordinateSystem
+            {
+                type    cartesian;
+                origin  (0 0 0);
+                rotation
+                {
+                    type axesRotation;
+                    e1 (1 0 0);
+                    e2 (0 1 0);
+                }
+            }
+        }
+    }
+}
+
+// RING 2 (middle):
+// Closed from 0.25 to 0.80 s
+porousRing2_close
+{
+    type    explicitPorositySource;
+    active  yes;
+    fields  (U);
+
+    explicitPorositySourceCoeffs
+    {
+        selectionMode    cellZone;
+        cellZone         porousRing2;
+
+        timeStart        0.25;
+        duration         0.55;   // 0.25–0.80 s closed
+
+        type DarcyForchheimer;
+        DarcyForchheimerCoeffs
+        {
+            d d [0 -2 0 0 0 0 0] (1e12 1e12 1e12);
+            f f [0 -1 0 0 0 0 0] (0 0 0);
+
+            coordinateSystem
+            {
+                type    cartesian;
+                origin  (0 0 0);
+                rotation
+                {
+                    type axesRotation;
+                    e1 (1 0 0);
+                    e2 (0 1 0);
+                }
+            }
+        }
+    }
+}
+
+// RING 1 (inner ring, around the core):
+// Closed from 0.35 to 0.70 s
+porousRing1_close
+{
+    type    explicitPorositySource;
+    active  yes;
+    fields  (U);
+
+    explicitPorositySourceCoeffs
+    {
+        selectionMode    cellZone;
+        cellZone         porousRing1;
+
+        timeStart        0.35;
+        duration         0.35;   // 0.35–0.70 s closed
+
+        type DarcyForchheimer;
+        DarcyForchheimerCoeffs
+        {
+            d d [0 -2 0 0 0 0 0] (1e12 1e12 1e12);
+            f f [0 -1 0 0 0 0 0] (0 0 0);
+
+            coordinateSystem
+            {
+                type    cartesian;
+                origin  (0 0 0);
+                rotation
+                {
+                    type axesRotation;
+                    e1 (1 0 0);
+                    e2 (0 1 0);
+                }
+            }
+        }
+    }
+}
+
+// CORE (centre disk):
+// Only closed between 0.50 and 0.60 s
+porousCore_close
+{
+    type    explicitPorositySource;
+    active  yes;
+    fields  (U);
+
+    explicitPorositySourceCoeffs
+    {
+        selectionMode    cellZone;
+        cellZone         porousCore;
+
+        timeStart        0.50;
+        duration         0.10;   // 0.50–0.60 s closed
+
+        type DarcyForchheimer;
+        DarcyForchheimerCoeffs
+        {
+            d d [0 -2 0 0 0 0 0] (1e12 1e12 1e12);
+            f f [0 -1 0 0 0 0 0] (0 0 0);
+
+            coordinateSystem
+            {
+                type    cartesian;
+                origin  (0 0 0);
+                rotation
+                {
+                    type axesRotation;
+                    e1 (1 0 0);
+                    e2 (0 1 0);
+                }
+            }
+        }
+    }
+}
+
+// ************************************************************************* //
+
+
+// ************************************************************************* //
