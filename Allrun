@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Run this case after sourcing the OpenFOAM v2412 environment.
+set -euo pipefail
+
+case_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$case_dir"
+
+mode="${1:-serial}"
+if [[ "$mode" != "serial" && "$mode" != "parallel" ]]; then
+    echo "Usage: $0 [serial|parallel]" >&2
+    exit 2
+fi
+
+for command in blockMesh topoSet checkMesh pimpleFoam; do
+    command -v "$command" >/dev/null || {
+        echo "Required OpenFOAM command not found: $command" >&2
+        echo "Source your OpenFOAM environment before running this script." >&2
+        exit 1
+    }
+done
+
+blockMesh | tee log.blockMesh
+topoSet | tee log.topoSet
+checkMesh | tee log.checkMesh
+
+if [[ "$mode" == "parallel" ]]; then
+    for command in decomposePar reconstructPar mpirun foamDictionary; do
+        command -v "$command" >/dev/null || {
+            echo "Required parallel command not found: $command" >&2
+            exit 1
+        }
+    done
+
+    n_subdomains="$(foamDictionary system/decomposeParDict -entry numberOfSubdomains -value | tr -d '[:space:];')"
+    [[ "$n_subdomains" =~ ^[1-9][0-9]*$ ]] || {
+        echo "Could not read numberOfSubdomains from system/decomposeParDict" >&2
+        exit 1
+    }
+
+    decomposePar | tee log.decomposePar
+    mpirun -np "$n_subdomains" pimpleFoam -parallel | tee log.pimpleFoam
+    reconstructPar -latestTime | tee log.reconstructPar
+else
+    pimpleFoam | tee log.pimpleFoam
+fi

@@ -1,0 +1,15 @@
+# Operating-system generated files
+.DS_Store
+Thumbs.db
+
+# OpenFOAM run output and temporary files
+processor*/
+postProcessing/
+log.*
+*.log
+*.foam
+dynamicCode/
+VTK/
+Ensight/
+core
+core.*
