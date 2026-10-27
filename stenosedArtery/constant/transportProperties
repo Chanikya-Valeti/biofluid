@@ -1,0 +1,27 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      transportProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Newtonian blood at high shear (same value as porousValve and womersleyPipe).
+
+transportModel  Newtonian;
+
+nu              3.3e-06;
+
+// "./Allrun carreau" copies transportProperties.carreau to
+// transportProperties.local; entries read here replace the defaults above.
+#includeIfPresent "transportProperties.local"
+
+// ************************************************************************* //

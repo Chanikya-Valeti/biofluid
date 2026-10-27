@@ -1,0 +1,94 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     simpleFoam;
+
+startFrom       startTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         3000;
+
+deltaT          1;
+
+writeControl    timeStep;
+
+writeInterval   500;
+
+purgeWrite      2;
+
+writeFormat     ascii;
+
+writePrecision  8;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable true;
+
+functions
+{
+    // Write the local kinematic viscosity so it can be sampled
+    viscosity
+    {
+        type            writeObjects;
+        libs            (utilityFunctionObjects);
+        objects         (nu);
+        writeControl    writeTime;
+    }
+
+    // Radial profiles of velocity and viscosity at mid-length
+    profile
+    {
+        type            sets;
+        libs            (sampling);
+        writeControl    writeTime;
+        interpolationScheme cell;
+        setFormat       raw;
+        fields          (U nu);
+        sets
+        {
+            radial
+            {
+                type    midPoint;
+                axis    x;
+                start   (0      0.005 0);
+                end     (0.0021 0.005 0);
+            }
+        }
+    }
+
+    flowRate
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        writeControl    timeStep;
+        writeInterval   10;
+        log             false;
+        writeFields     false;
+        regionType      patch;
+        name            OUTLET;
+        operation       sum;
+        fields          (phi);
+    }
+}
+
+// ************************************************************************* //

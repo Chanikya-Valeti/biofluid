@@ -1,0 +1,39 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      transportProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Carreau model for whole blood (Cho & Kensey 1991), written as kinematic
+// viscosities using rho = 1060 kg/m^3:
+//
+//     nu = nuInf + (nu0 - nuInf) [1 + (k gammaDot)^a]^((n - 1)/a)
+//
+//     mu0 = 0.056 Pa s, muInf = 0.00345 Pa s, lambda = 3.313 s, n = 0.3568
+//
+// For the Newtonian reference run, replace the model with
+//     transportModel  Newtonian;
+//     nu              3.255e-06;
+
+transportModel  BirdCarreau;
+
+BirdCarreauCoeffs
+{
+    nu0         [0 2 -1 0 0 0 0] 5.2830e-05;
+    nuInf       [0 2 -1 0 0 0 0] 3.2547e-06;
+    k           [0 0 1 0 0 0 0]  3.313;
+    n           [0 0 0 0 0 0 0]  0.3568;
+    a           [0 0 0 0 0 0 0]  2;
+}
+
+// ************************************************************************* //

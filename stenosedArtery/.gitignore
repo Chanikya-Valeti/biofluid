@@ -1,0 +1,23 @@
+# Operating-system generated files
+.DS_Store
+Thumbs.db
+
+# OpenFOAM run output and temporary files
+processor*/
+postProcessing/
+log.*
+*.log
+*.foam
+dynamicCode/
+VTK/
+Ensight/
+core
+core.*
+
+# Regenerated mesh, time directories and validation figures
+constant/polyMesh/
+[1-9]*/
+0.[0-9]*/
+/*.png
+__pycache__/
+constant/transportProperties.local

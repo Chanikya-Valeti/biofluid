@@ -1,0 +1,51 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      p;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Kinematic pressure (p/rho). The inlet pressure oscillates harmonically and
+// the outlet is held at zero, giving a uniform axial pressure gradient
+//     -dp/dx = G0 cos(omega t),   G0 = 0.04 / 0.02 = 2 m/s^2,   f = 1 Hz.
+
+dimensions      [0 2 -2 0 0 0 0];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    INLET
+    {
+        type            uniformFixedValue;
+        uniformValue
+        {
+            type        cosine;
+            frequency   1;      // Hz
+            amplitude   0.04;   // m^2/s^2  (= G0 * L)
+            scale       1;
+            level       0;
+        }
+    }
+    OUTLET
+    {
+        type            fixedValue;
+        value           uniform 0;
+    }
+    WALL
+    {
+        type            zeroGradient;
+    }
+}
+
+// ************************************************************************* //
