@@ -1,0 +1,187 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     simpleFoam;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         1000;
+
+deltaT          1;
+
+writeControl    timeStep;
+
+writeInterval   500;
+
+purgeWrite      2;
+
+writeFormat     binary;
+
+writePrecision  8;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable true;
+
+// Area-averaged pressure on cross-sections of the bend at 120, 165, 210
+// and 255 degrees; validate.py uses them for the curved-pipe friction
+// factor. The sections are bounded so that they only cut the bend.
+sectionTemplate
+{
+    type            surfaceFieldValue;
+    libs            (fieldFunctionObjects);
+    writeControl    writeTime;
+    log             false;
+    writeFields     false;
+    regionType      sampledSurface;
+    operation       areaAverage;
+    fields          (p);
+    sampledSurfaceDict {}
+}
+
+
+functions
+{
+    inletFlow
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        writeControl    timeStep;
+        writeInterval   10;
+        log             false;
+        writeFields     false;
+        regionType      patch;
+        name            INLET;
+        operation       sum;
+        fields          (phi);
+    }
+
+    outletFlow
+    {
+        $inletFlow;
+        name            OUTLET;
+    }
+
+    theta120
+    {
+        $sectionTemplate;
+        name            theta120;
+        sampledSurfaceDict
+        {
+            type            cuttingPlane;
+            planeType       pointAndNormal;
+            pointAndNormalDict
+            {
+                point       (0 0.012124356 0.021);
+                normal      (0 -0.5 0.8660254);
+            }
+            bounds          (-0.003 0.0091243557 0.018) (0.003 0.015124356 0.024);
+            interpolate     false;
+        }
+    }
+    theta165
+    {
+        $sectionTemplate;
+        name            theta165;
+        sampledSurfaceDict
+        {
+            type            cuttingPlane;
+            planeType       pointAndNormal;
+            pointAndNormalDict
+            {
+                point       (0 0.0036234666 0.027522962);
+                normal      (0 -0.96592583 0.25881905);
+            }
+            bounds          (-0.003 0.00062346663 0.024522962) (0.003 0.0066234666 0.030522962);
+            interpolate     false;
+        }
+    }
+    theta210
+    {
+        $sectionTemplate;
+        name            theta210;
+        sampledSurfaceDict
+        {
+            type            cuttingPlane;
+            planeType       pointAndNormal;
+            pointAndNormalDict
+            {
+                point       (0 -0.007 0.026124356);
+                normal      (0 -0.8660254 -0.5);
+            }
+            bounds          (-0.003 -0.01 0.023124356) (0.003 -0.004 0.029124356);
+            interpolate     false;
+        }
+    }
+    theta255
+    {
+        $sectionTemplate;
+        name            theta255;
+        sampledSurfaceDict
+        {
+            type            cuttingPlane;
+            planeType       pointAndNormal;
+            pointAndNormalDict
+            {
+                point       (0 -0.013522962 0.017623467);
+                normal      (0 -0.25881905 -0.96592583);
+            }
+            bounds          (-0.003 -0.016522962 0.014623467) (0.003 -0.010522962 0.020623467);
+            interpolate     false;
+        }
+    }
+
+    // Straight inlet leg: centreline (pressure gradient check) and the
+    // diameter in the plane of the bend at 240 degrees (velocity skew)
+    lines
+    {
+        type            sets;
+        libs            (sampling);
+        writeControl    writeTime;
+        interpolationScheme cellPoint;
+        setFormat       raw;
+        fields          (U p);
+        sets
+        {
+            inletLeg
+            {
+                type    uniform;
+                axis    y;
+                start   (0 -0.015 0);
+                end     (0 -0.001 0);
+                nPoints 141;
+            }
+            bendPlane240
+            {
+                type    uniform;
+                axis    distance;
+                start   (0 -0.013854674 0.021999);
+                end     (0 -0.010394037 0.020001);
+                nPoints 101;
+            }
+        }
+    }
+}
+
+// ************************************************************************* //

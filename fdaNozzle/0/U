@@ -1,0 +1,50 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    location    "0";
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Throat Reynolds number Re_t = u_t d / nu = 500 (the FDA benchmark's
+// laminar condition): throat mean velocity u_t = 0.4125 m/s, inlet mean
+// velocity u_t (d/D)^2 = 0.045833 m/s (inlet Re = 167). The inlet profile
+// is recycled from 2 D downstream and rescaled to the mean velocity.
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (0 0 0);
+
+boundaryField
+{
+    INLET
+    {
+        type                mapped;
+        field               U;
+        setAverage          true;
+        average             (0 0.045833333 0);
+        interpolationScheme cell;
+        value               uniform (0 0.045833333 0);
+    }
+    OUTLET
+    {
+        type            inletOutlet;
+        inletValue      uniform (0 0 0);
+        value           uniform (0 0 0);
+    }
+    WALL
+    {
+        type            noSlip;
+    }
+}
+
+// ************************************************************************* //

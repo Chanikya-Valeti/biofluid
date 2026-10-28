@@ -1,0 +1,53 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    location    "0";
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Pulsatile inflow, period 1 s (60 beats per minute):
+//     Q(t) = Qm [1 + 0.6 sin(2 pi t)],  Qm = 1.5551e-6 m^3/s (93.3 mL/min)
+// The mean velocity is 0.055 m/s (mean Re = 100, range 40 - 160) and the
+// Womersley number is alpha = R sqrt(omega/nu) = 4.1.
+//
+// INLET imposes the exact fully developed (Womersley) velocity profile for
+// this flow rate. system/makeWomersleyInlet.py writes it to
+// constant/boundaryData/INLET (run by Allrun), and timeVaryingMappedFixedValue
+// interpolates it in space and time.
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (0 0 0);
+
+boundaryField
+{
+    INLET
+    {
+        type            timeVaryingMappedFixedValue;
+        setAverage      true;     // mean velocity from boundaryData
+        offset          (0 0 0);
+        value           uniform (0 0 0);
+    }
+    OUTLET
+    {
+        type            inletOutlet;
+        inletValue      uniform (0 0 0);
+        value           uniform (0 0 0);
+    }
+    WALL
+    {
+        type            noSlip;
+    }
+}
+
+// ************************************************************************* //

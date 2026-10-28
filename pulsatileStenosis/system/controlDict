@@ -1,0 +1,171 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     pimpleFoam;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+// Three cardiac cycles; cycle 1 removes the start-up transient, cycle 3 is
+// used for the time-averaged results and compared with cycle 2.
+endTime         3;
+
+deltaT          0.001;
+
+writeControl    adjustable;
+
+writeInterval   0.5;
+
+purgeWrite      0;
+
+writeFormat     binary;
+
+writePrecision  8;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable true;
+
+adjustTimeStep  yes;
+
+maxCo           0.9;
+
+maxDeltaT       0.001;
+
+functions
+{
+    inletFlow
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        writeControl    timeStep;
+        writeInterval   1;
+        log             false;
+        writeFields     false;
+        regionType      patch;
+        name            INLET;
+        operation       sum;
+        fields          (phi);
+    }
+
+    outletFlow
+    {
+        $inletFlow;
+        name            OUTLET;
+    }
+
+    // Wall shear stress and its magnitude, evaluated every time step
+    wallShearStress
+    {
+        type            wallShearStress;
+        libs            (fieldFunctionObjects);
+        patches         (WALL);
+        writeControl    writeTime;
+        log             false;
+    }
+
+    magWallShearStress
+    {
+        type            mag;
+        libs            (fieldFunctionObjects);
+        field           wallShearStress;
+        writeControl    writeTime;
+    }
+
+    // Time averages over the third cycle (2 s < t <= 3 s):
+    //   TAWSS = mean(|tau|),  OSI = 0.5 (1 - |mean(tau)| / mean(|tau|))
+    cycleAverage
+    {
+        type            fieldAverage;
+        libs            (fieldFunctionObjects);
+        timeStart       2;
+        writeControl    writeTime;
+        fields
+        (
+            wallShearStress
+            {
+                mean        on;
+                prime2Mean  off;
+                base        time;
+            }
+            mag(wallShearStress)
+            {
+                mean        on;
+                prime2Mean  off;
+                base        time;
+            }
+        );
+    }
+
+    // Spatially averaged wall shear stress history (cycle periodicity check)
+    wallMeanWSS
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        writeControl    timeStep;
+        writeInterval   1;
+        log             false;
+        writeFields     false;
+        regionType      patch;
+        name            WALL;
+        operation       areaAverage;
+        fields          (mag(wallShearStress));
+    }
+
+    // Upstream centreline velocity (Womersley check) and throat velocity
+    probes
+    {
+        type            probes;
+        libs            (sampling);
+        writeControl    timeStep;
+        writeInterval   1;
+        fields          (U p);
+        probeLocations
+        (
+            (0 -0.024 0)    // 4 D upstream of the throat (3 D before the stenosis)
+            (0  0     0)    // throat
+        );
+    }
+
+    // TAWSS and OSI on every wall face at the end of the run
+    wallData
+    {
+        type            surfaces;
+        libs            (sampling);
+        writeControl    onEnd;
+        surfaceFormat   raw;
+        fields          (wallShearStressMean mag(wallShearStress)Mean);
+        interpolationScheme cell;
+        surfaces
+        {
+            wall
+            {
+                type        patch;
+                patches     (WALL);
+                interpolate false;
+            }
+        }
+    }
+}
+
+// ************************************************************************* //

@@ -1,0 +1,34 @@
+#!/usr/bin/env bash
+# Run this case after sourcing the OpenFOAM v2412 environment.
+# Usage: ./Allrun
+# Builds the mesh, sets the frozen Poiseuille carrier flow with setExprFields,
+# tracks the particles with icoUncoupledKinematicParcelFoam and checks the
+# result against the exact particle motion with validate.py
+# (needs python3 + numpy).
+set -euo pipefail
+
+case_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$case_dir"
+
+for command in blockMesh checkMesh setExprFields icoUncoupledKinematicParcelFoam; do
+    command -v "$command" >/dev/null || {
+        echo "Required OpenFOAM command not found: $command" >&2
+        echo "Source your OpenFOAM environment before running this script." >&2
+        exit 1
+    }
+done
+
+# 0/ is regenerated from 0.orig/ because setExprFields overwrites 0/U
+rm -rf 0
+cp -r 0.orig 0
+
+blockMesh | tee log.blockMesh
+checkMesh | tee log.checkMesh
+setExprFields | tee log.setExprFields
+icoUncoupledKinematicParcelFoam | tee log.icoUncoupledKinematicParcelFoam
+
+if command -v python3 >/dev/null && python3 -c "import numpy" 2>/dev/null; then
+    python3 validate.py | tee log.validate
+else
+    echo "python3 with numpy not found: skipping validate.py" >&2
+fi

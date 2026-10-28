@@ -1,0 +1,183 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      controlDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+application     simpleFoam;
+
+startFrom       latestTime;
+
+startTime       0;
+
+stopAt          endTime;
+
+endTime         1500;
+
+deltaT          1;
+
+writeControl    timeStep;
+
+writeInterval   500;
+
+purgeWrite      2;
+
+writeFormat     binary;
+
+writePrecision  8;
+
+writeCompression off;
+
+timeFormat      general;
+
+timePrecision   6;
+
+runTimeModifiable true;
+
+functions
+{
+    inletFlow
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        writeControl    timeStep;
+        writeInterval   10;
+        log             false;
+        writeFields     false;
+        regionType      patch;
+        name            INLET;
+        operation       sum;
+        fields          (phi);
+    }
+
+    outletFlow
+    {
+        $inletFlow;
+        name            OUTLET;
+    }
+
+    wallShearStress
+    {
+        type            wallShearStress;
+        libs            (fieldFunctionObjects);
+        patches         (WALL);
+        writeControl    writeTime;
+        log             false;
+    }
+
+    // Velocity component into the sac: max(U_z, 0) and out of it: max(-U_z, 0)
+    sacInflowVelocity
+    {
+        type            exprField;
+        libs            (fieldFunctionObjects);
+        field           UzIn;
+        expression      "max(U.z(), 0)";
+        dimensions      [0 1 -1 0 0 0 0];
+        writeControl    none;
+    }
+
+    sacOutflowVelocity
+    {
+        type            exprField;
+        libs            (fieldFunctionObjects);
+        field           UzOut;
+        expression      "max(-U.z(), 0)";
+        dimensions      [0 1 -1 0 0 0 0];
+        writeControl    none;
+    }
+
+    // Flow through the aneurysm neck (the plane z = R, bounded to the neck)
+    neckFlow
+    {
+        type            surfaceFieldValue;
+        libs            (fieldFunctionObjects);
+        writeControl    writeTime;
+        log             false;
+        writeFields     false;
+        regionType      sampledSurface;
+        name            neckPlane;
+        operation       areaIntegrate;
+        fields          (UzIn UzOut);
+        sampledSurfaceDict
+        {
+            type            cuttingPlane;
+            planeType       pointAndNormal;
+            pointAndNormalDict
+            {
+                point       (0 0 0.002);
+                normal      (0 0 1);
+            }
+            bounds          (-0.0035 -0.0035 0.0019) (0.0035 0.0035 0.0021);
+            interpolate     true;
+        }
+    }
+
+    // Wall shear stress on every wall face (for validate.py)
+    wallData
+    {
+        type            surfaces;
+        libs            (sampling);
+        writeControl    writeTime;
+        surfaceFormat   raw;
+        fields          (wallShearStress);
+        interpolationScheme cell;
+        surfaces
+        {
+            wall
+            {
+                type        patch;
+                patches     (WALL);
+                interpolate false;
+            }
+        }
+    }
+
+    // Velocity inside the sac (centre and near the dome), for convergence
+    sacProbes
+    {
+        type            probes;
+        libs            (sampling);
+        writeControl    timeStep;
+        writeInterval   10;
+        fields          (U);
+        probeLocations
+        (
+            (0 0 0.00424)
+            (0 0 0.00650)
+        );
+    }
+
+    // Parent-artery centreline upstream of the aneurysm
+    lines
+    {
+        type            sets;
+        libs            (sampling);
+        writeControl    writeTime;
+        interpolationScheme cellPoint;
+        setFormat       raw;
+        fields          (U p);
+        sets
+        {
+            parentAxis
+            {
+                type    uniform;
+                axis    y;
+                start   (0 -0.0315 0);
+                end     (0  0.0475 0);
+                nPoints 791;
+            }
+        }
+    }
+}
+
+// ************************************************************************* //

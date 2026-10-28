@@ -1,0 +1,42 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    location    "0";
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Placeholder: Allrun copies 0.orig/ to 0/ and setExprFields (see
+// system/setExprFieldsDict) overwrites the internal field with the fully
+// developed Poiseuille profile u_y = 2 Um (1 - r^2/R^2), Um = 0.05 m/s.
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (0 0 0);
+
+boundaryField
+{
+    INLET
+    {
+        type            zeroGradient;
+    }
+    OUTLET
+    {
+        type            zeroGradient;
+    }
+    WALL
+    {
+        type            noSlip;
+    }
+}
+
+// ************************************************************************* //
