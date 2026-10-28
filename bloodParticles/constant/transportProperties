@@ -1,0 +1,26 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      transportProperties;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Carrier fluid: Newtonian blood, rho = 1060 kg/m^3, nu = 3.3e-6 m^2/s
+// (mu = 3.498e-3 Pa s; the rho and mu fields in 0/ must match).
+
+rhoInf          1060;
+
+transportModel  Newtonian;
+
+nu              3.3e-06;
+
+// ************************************************************************* //

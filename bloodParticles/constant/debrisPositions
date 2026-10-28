@@ -1,0 +1,26 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       vectorField;
+    location    "constant";
+    object      debrisPositions;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Release points 1 mm downstream of the inlet, in the vertical (x = 0) plane:
+// z/R = 0.8, 0.4, 0 above the axis
+(
+    (0 0.001 0.0016)
+    (0 0.001 0.0008)
+    (0 0.001 0)
+)
+
+// ************************************************************************* //

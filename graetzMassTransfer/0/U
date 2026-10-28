@@ -1,0 +1,46 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    location    "0";
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Mean velocity 5 mm/s: Re = U D / nu = 0.15. The inlet profile is recycled
+// from 2 D downstream and rescaled to the mean (fully developed Poiseuille).
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   uniform (0 0.005 0);
+
+boundaryField
+{
+    INLET
+    {
+        type                mapped;
+        field               U;
+        setAverage          true;
+        average             (0 0.005 0);
+        interpolationScheme cell;
+        value               uniform (0 0.005 0);
+    }
+    OUTLET
+    {
+        type            zeroGradient;
+    }
+    WALL
+    {
+        type            noSlip;
+    }
+}
+
+// ************************************************************************* //
