@@ -1,0 +1,44 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      p;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Kinematic pressure (p/rho). A fixed drop of 0.02 m^2/s^2 over L = 0.01 m
+// gives a uniform driving gradient G = -dp/dy = 2 m/s^2
+// (about 2.1 kPa/m, a wall shear stress of about 2.1 Pa).
+
+dimensions      [0 2 -2 0 0 0 0];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    INLET
+    {
+        type            fixedValue;
+        value           uniform 0.02;
+    }
+    OUTLET
+    {
+        type            fixedValue;
+        value           uniform 0;
+    }
+    WALL
+    {
+        type            zeroGradient;
+    }
+}
+
+// ************************************************************************* //

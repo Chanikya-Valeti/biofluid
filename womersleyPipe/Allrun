@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+# Run this case after sourcing the OpenFOAM v2412 environment.
+# Usage: ./Allrun
+# Builds the mesh, runs pimpleFoam and checks the result against the reference
+# solution with validate.py (needs python3 + numpy). Exit status is non-zero
+# if any step or the validation fails.
+set -euo pipefail
+
+case_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "$case_dir"
+
+for command in blockMesh checkMesh pimpleFoam; do
+    command -v "$command" >/dev/null || {
+        echo "Required OpenFOAM command not found: $command" >&2
+        echo "Source your OpenFOAM environment before running this script." >&2
+        exit 1
+    }
+done
+
+blockMesh | tee log.blockMesh
+checkMesh | tee log.checkMesh
+pimpleFoam | tee log.pimpleFoam
+
+if command -v python3 >/dev/null && python3 -c "import numpy" 2>/dev/null; then
+    python3 validate.py | tee log.validate
+else
+    echo "python3 with numpy not found: skipping validate.py" >&2
+fi

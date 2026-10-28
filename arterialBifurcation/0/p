@@ -1,0 +1,42 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volScalarField;
+    location    "0";
+    object      p;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Both daughter outlets are held at the same pressure, so the flow split is
+// set by the (symmetric) geometry alone.
+
+dimensions      [0 2 -2 0 0 0 0];
+
+internalField   uniform 0;
+
+boundaryField
+{
+    INLET
+    {
+        type            zeroGradient;
+    }
+    "OUTLET.*"
+    {
+        type            fixedValue;
+        value           uniform 0;
+    }
+    WALL
+    {
+        type            zeroGradient;
+    }
+}
+
+// ************************************************************************* //

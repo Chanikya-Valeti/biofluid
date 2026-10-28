@@ -1,0 +1,64 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+| =========                 |                                                 |
+| \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox           |
+|  \\    /   O peration     | Version:  v2412                                 |
+|   \\  /    A nd           | Website:  www.openfoam.com                      |
+|    \\/     M anipulation  |                                                 |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+// Background mesh for snappyHexMesh: a box around constant/triSurface/
+// bifurcation.stl with 0.35 mm cubic cells (about 17 cells across the parent vessel).
+
+scale 1;
+
+xmin -0.003675;  xmax 0.003675;
+ymin -0.0364;  ymax 0.0413;
+zmin -0.02975;  zmax 0.02975;
+
+vertices
+(
+    ($xmin $ymin $zmin)
+    ($xmax $ymin $zmin)
+    ($xmax $ymax $zmin)
+    ($xmin $ymax $zmin)
+    ($xmin $ymin $zmax)
+    ($xmax $ymin $zmax)
+    ($xmax $ymax $zmax)
+    ($xmin $ymax $zmax)
+);
+
+blocks
+(
+    hex (0 1 2 3 4 5 6 7) (21 222 170) simpleGrading (1 1 1)
+);
+
+edges
+(
+);
+
+boundary
+(
+    background
+    {
+        type patch;
+        faces
+        (
+            (0 3 2 1)
+            (4 5 6 7)
+            (0 4 7 3)
+            (1 2 6 5)
+            (0 1 5 4)
+            (3 7 6 2)
+        );
+    }
+);
+
+// ************************************************************************* //
